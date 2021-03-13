@@ -39,7 +39,10 @@ class _NoteListState extends State<NoteList> {
         floatingActionButton: FloatingActionButton(
           onPressed: () {
             Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => NoteModify()));
+                .push(MaterialPageRoute(builder: (_) => NoteModify()))
+                .then((value) {
+              _fetchNote();
+            });
           },
           child: Icon(Icons.add),
         ),
@@ -64,7 +67,27 @@ class _NoteListState extends State<NoteList> {
                   confirmDismiss: (direction) async {
                     final result = await showDialog(
                         context: context, builder: (_) => NoteDelete());
-                    print(result);
+                    if (result) {
+                      final result = await service
+                          .deleteNote(_apiResponse.data[index].noteID);
+                      var message;
+                      if (result != null && result.data) {
+                        message = 'The note was deleted successfully';
+                      } else {
+                        message = result.errorMessage ?? 'An error occurred';
+                      }
+                      showDialog(context: context, builder: (____) =>
+                          AlertDialog(
+                            title: Text("Done"),
+                            content: Text(message),
+                            actions: [
+                              TextButton(onPressed: () {
+                                Navigator.of(context).pop();
+                              }, child: Text("Ok"))
+                            ],
+                          ));
+                      return result?.data ?? false;
+                    }
                     return result;
                   },
                   background: Container(
@@ -78,14 +101,23 @@ class _NoteListState extends State<NoteList> {
                   child: ListTile(
                     title: Text(
                       _apiResponse.data[index].noteTitle,
-                      style: TextStyle(color: Theme.of(context).primaryColor),
+                      style: TextStyle(color: Theme
+                          .of(context)
+                          .primaryColor),
                     ),
                     subtitle: Text(
-                        'Last edited on ${formatDateTime(_apiResponse.data[index].latestEditDateTime ?? _apiResponse.data[index].createDateTime)}'),
+                        'Last edited on ${formatDateTime(
+                            _apiResponse.data[index].latestEditDateTime ??
+                                _apiResponse.data[index].createDateTime)}'),
                     onTap: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (_) => NoteModify(
-                              noteId: _apiResponse.data[index].noteID)));
+                      Navigator.of(context)
+                          .push(MaterialPageRoute(
+                          builder: (_) =>
+                              NoteModify(
+                                  noteId: _apiResponse.data[index].noteID)))
+                          .then((value) {
+                        _fetchNote();
+                      });
                     },
                   ),
                 );
