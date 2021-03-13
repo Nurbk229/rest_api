@@ -58,57 +58,89 @@ class _NoteModifyState extends State<NoteModify> {
           padding: const EdgeInsets.all(16.0),
           child: _isLoading
               ? Center(
-            child: CircularProgressIndicator(),
-          )
+                  child: CircularProgressIndicator(),
+                )
               : Column(
-            children: [
-              TextField(
-                controller: _titleController,
-                decoration: InputDecoration(hintText: 'Note title'),
-              ),
-              Container(
-                height: 8,
-              ),
-              TextField(
-                controller: _contentController,
-                decoration: InputDecoration(hintText: 'Note Content'),
-              ),
-              Container(
-                height: 32,
-              ),
-              SizedBox(
-                  width: double.infinity,
-                  height: 35,
-                  child: ElevatedButton(
-                    child: Text(
-                      "Submit",
-                      style: TextStyle(color: Colors.white),
+                  children: [
+                    TextField(
+                      controller: _titleController,
+                      decoration: InputDecoration(hintText: 'Note title'),
                     ),
-                    onPressed: () async {
-                      if (isEditing) {} else {
-                        print("tttttt else");
-                        final note = NoteModel(noteTitle: _titleController.text,
-                            noteContent: _contentController.text);
-                        final result = await service.createNote(note);
-                        final title = 'Done';
-                        final text = result.error ? (result.errorMessage ??
-                            'An error occurred') : 'Your note was created';
-                        showDialog(context: context, builder: (_) =>
-                            AlertDialog(
-                              title: Text(title),
-                              content: Text(text),
-                              actions: [
-                                TextButton(onPressed: () {
-                                  service.getNoteList();
-                                  Navigator.of(context).pop();
-                                }, child: Text('Ok'))
-                              ],
-                            ));
-                      }
-                    },
-                  ))
-            ],
-          ),
+                    Container(
+                      height: 8,
+                    ),
+                    TextField(
+                      controller: _contentController,
+                      decoration: InputDecoration(hintText: 'Note Content'),
+                    ),
+                    Container(
+                      height: 32,
+                    ),
+                    SizedBox(
+                        width: double.infinity,
+                        height: 35,
+                        child: ElevatedButton(
+                          child: Text(
+                            "Submit",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          onPressed: () async {
+                            if (isEditing) {
+                              setState(() {
+                                _isLoading = true;
+                              });
+                              final note = NoteModel(
+                                  noteTitle: _titleController.text,
+                                  noteContent: _contentController.text);
+                              final result =
+                                  await service.updateNote(widget.noteId, note);
+                              setState(() {
+                                _isLoading = false;
+                              });
+                              final title = 'Done';
+                              final text = result.error ? (result.errorMessage ?? 'An error occurred') : 'Your note was updated';
+                              showDialogFun(title,text,result);
+                            } else {
+                              setState(() {
+                                _isLoading = true;
+                              });
+                              final note = NoteModel(
+                                  noteTitle: _titleController.text,
+                                  noteContent: _contentController.text);
+                              final result = await service.createNote(note);
+                              setState(() {
+                                _isLoading = false;
+                              });
+                              final title = 'Done';
+                              final text = result.error
+                                  ? (result.errorMessage ?? 'An error occurred')
+                                  : 'Your note was created';
+                              showDialogFun(title,text,result);
+                            }
+                          },
+                        ))
+                  ],
+                ),
         ));
+  }
+
+  showDialogFun(title,text,result){
+    showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: Text(title),
+          content: Text(text),
+          actions: [
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('Ok'))
+          ],
+        )).then((value) {
+      if (result.data) {
+        Navigator.of(context).pop();
+      }
+    });
   }
 }
