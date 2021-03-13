@@ -31,7 +31,6 @@ class NoteServices {
     return http.get(API + '/notes/$noteID', headers: headers).then((data) {
       if (data.statusCode == 200) {
         final jsonData = json.decode(data.body);
-
         return APIResponse<NoteModel>(data: NoteModel.fromJson(jsonData));
       }
       return APIResponse<NoteModel>(
@@ -51,5 +50,28 @@ class NoteServices {
       return APIResponse<bool>(error: true, errorMessage: 'An error occured');
     }).catchError((_) =>
             APIResponse<bool>(error: true, errorMessage: 'An error occured'));
+  }
+
+  Future<APIResponse<bool>> updateNote(String noteID, NoteModel noteModel) {
+    return http
+        .put(API + '/notes/$noteID',
+            headers: headers, body: json.encode(NoteModel.toJson(noteModel)))
+        .then((data) {
+      if (data.statusCode == 201) {
+        return APIResponse<bool>(data: true);
+      }
+      return APIResponse<bool>(error: true, errorMessage: 'An error occured');
+    }).catchError((_) =>
+            APIResponse<bool>(error: true, errorMessage: 'An error occured'));
+  }
+
+  Future<APIResponse<bool>> deleteNote(String noteID) {
+    return http.delete(API + '/notes/$noteID', headers: headers).then((data) {
+      if (data.statusCode == 204) {
+        return APIResponse<bool>(data: true);
+      }
+      return APIResponse<bool>(error: true, errorMessage: 'An error occured');
+    }).catchError((_) =>
+        APIResponse<bool>(error: true, errorMessage: 'An error occured'));
   }
 }
